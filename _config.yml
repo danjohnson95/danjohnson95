@@ -3,7 +3,7 @@ email:
 description: >- # this means to ignore newlines until "baseurl:"
   Software engineer with an eye for design - specialising in React and PHP.
 github_username: danjohnson95
-minimal_mistakes_skin: contrast
+minimal_mistakes_skin: default
 remote_theme: daattali/beautiful-jekyll
 
 plugins:
