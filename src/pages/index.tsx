@@ -23,8 +23,8 @@ const IndexPage: React.FC = () => (
     <Seo title="Home" />
     <div className="text-center md:text-left flex flex-col flex-col-reverse md:flex-row justify-between items-center mt-20">
       <div className="space-y-4">
-        <h1 className="text-5xl font-extrabold">Hi, I'm <span className="text-transparent bg-clip-text bg-gradient-to-br from-pink-400 to-red-600">Dan Johnson</span></h1>
-        <h2 className="text-xl font-bold text-gray-700">
+        <h1 className="text-4xl md:text-5xl font-extrabold">Hi, I'm <span className="block md:inline text-transparent bg-clip-text bg-gradient-to-br from-pink-400 to-red-600">Dan Johnson</span></h1>
+        <h2 className="text-lg md:text-xl font-bold text-gray-700">
           <div>and I'm a software engineer</div>
           <div className="text-sm font-medium">with 8 years commercial experience, and expertise in design.</div>
         </h2>
