@@ -3,6 +3,21 @@ import Layout from "../components/layout"
 import Seo from "../components/seo"
 import Me from '../images/me.jpg'
 
+const technologies = [
+  'Javascript',
+  'Typescript',
+  'PHP',
+  'Swift',
+  'K8s',
+]
+
+const interests = [
+  'Running 🏃‍♂️',
+  'Cooking 🍳',
+  'Español 🇪🇸',
+  'Travelling 🌎',
+]
+
 const IndexPage: React.FC = () => (
   <Layout>
     <Seo title="Home" />
@@ -15,17 +30,14 @@ const IndexPage: React.FC = () => (
         </h2>
         <div className="text-xs font-medium space-y-2">
           <div className="flex space-x-2 justify-center md:justify-start">
-            <span className="rounded-xl bg-gray-100 text-gray-500 px-3 py-1">Javascript</span>
-            <span className="rounded-xl bg-gray-100 text-gray-500 px-3 py-1">Typescript</span>
-            <span className="rounded-xl bg-gray-100 text-gray-500 px-3 py-1">PHP</span>
-            <span className="rounded-xl bg-gray-100 text-gray-500 px-3 py-1">Swift</span>
-            <span className="rounded-xl bg-gray-100 text-gray-500 px-3 py-1">K8s</span>
+            {technologies.map(tech => (
+              <span key={tech} className="rounded-xl bg-gray-100 text-gray-500 px-3 py-1">{tech}</span>
+            ))}
           </div>
           <div className="flex space-x-2 justify-center md:justify-start">
-            <span className="rounded-xl bg-gray-100 text-gray-500 px-3 py-1">Running 🏃‍♂️</span>
-            <span className="rounded-xl bg-gray-100 text-gray-500 px-3 py-1">Cooking 🍳</span>
-            <span className="rounded-xl bg-gray-100 text-gray-500 px-3 py-1">Español 🇪🇸</span>
-            <span className="rounded-xl bg-gray-100 text-gray-500 px-3 py-1">Travelling 🌎</span>
+            {interests.map(interest => (
+              <span className="rounded-xl bg-gray-100 text-gray-500 px-3 py-1">{interest}</span>
+            ))}
           </div>
         </div>
         <div className="flex space-x-2 text-xs font-medium">
