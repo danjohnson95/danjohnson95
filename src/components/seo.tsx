@@ -45,6 +45,10 @@ function Seo({ description, lang, meta, title }) {
           content: title,
         },
         {
+          property: `og:type`,
+          content: 'profile',
+        },
+        {
           property: `og:description`,
           content: metaDescription,
         },
@@ -57,10 +61,6 @@ function Seo({ description, lang, meta, title }) {
           content: `summary`,
         },
         {
-          name: `twitter:creator`,
-          content: site.siteMetadata?.author || ``,
-        },
-        {
           name: `twitter:title`,
           content: title,
         },
@@ -68,8 +68,31 @@ function Seo({ description, lang, meta, title }) {
           name: `twitter:description`,
           content: metaDescription,
         },
+        {
+          name: 'profile:first_name',
+          content: 'Dan',
+        },
+        {
+          name: 'profile:last_name',
+          content: 'Johnson',
+        },
+        {
+          name: 'profile:gender',
+          content: 'male',
+        },
       ].concat(meta)}
-    />
+    >
+      <script type="application/ld+json">
+      {
+          "@context": "https://schema.org/",
+          "@type": "Person",
+          "name": "Dan Johnson",
+          "gender": "Male",
+          "knowsLanguage": ["en", "es"],
+          "jobTitle": "Software Engineer"
+      }
+      </script>
+    </Helmet>
   )
 }
 
