@@ -2,6 +2,22 @@ module.exports = {
   siteMetadata: {
     title: `Dan Johnson`,
     description: `Hi, I'm Dan Johnson and I'm a software engineer with 8 years commercial experience, and expertise in design.`,
+    aboutMe: {
+      jobTitle: "Software Engineer",
+      technologies: [
+        'Javascript',
+        'Typescript',
+        'PHP',
+        'Swift',
+        'K8s',
+      ],
+      interests: [
+        'Running 🏃‍♂️',
+        'Cooking 🍳',
+        'Español 🇪🇸',
+        'Travelling 🌎',
+      ],
+    },
   },
   plugins: [
     `gatsby-plugin-react-helmet`,

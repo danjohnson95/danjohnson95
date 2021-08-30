@@ -18,7 +18,9 @@ function Seo({ description, lang, meta, title }) {
           siteMetadata {
             title
             description
-            author
+            aboutMe {
+              jobTitle
+            }
           }
         }
       }
@@ -83,14 +85,14 @@ function Seo({ description, lang, meta, title }) {
       ].concat(meta)}
     >
       <script type="application/ld+json">
-      {
-          "@context": "https://schema.org/",
-          "@type": "Person",
-          "name": "Dan Johnson",
-          "gender": "Male",
-          "knowsLanguage": ["en", "es"],
-          "jobTitle": "Software Engineer"
-      }
+        {`{
+            "@context": "https://schema.org/",
+            "@type": "Person",
+            "name": "Dan Johnson",
+            "gender": "Male",
+            "knowsLanguage": ["en", "es"],
+            "jobTitle": ${site.siteMetadata.aboutMe.jobTitle}
+        }`}
       </script>
     </Helmet>
   )
