@@ -1,0 +1,133 @@
+---
+title: Styling translated string fragments
+date: 2024-09-25T16:23:40+01:00
+summary: Don't couple your translation content with markup
+image: /images/blogs/styling-translated-fragments.png
+tags:
+  - Localisation
+---
+
+When you're building a globalised application, your content lives in a separate translations file. So a template that used to look like this:
+
+```html
+<div>By clicking Proceed, you agree to our Terms and Conditions</div>
+```
+
+will become something like this:
+
+```html
+<div>@lang('termsAndConditions')</div>
+```
+
+But when a string is referenced like this, how do we style parts of that string? Or make part of that string a link? Or add a tooltip to part of that string?
+
+## The bad way
+
+You might be tempted to do something like this: putting HTML in the translations file:
+
+```json
+{
+  "termsAndConditions": "By clicking Proceed, you agree to our <a class=\"font-medium\" href=\"/terms\">Terms and Conditions</a>"
+}
+```
+
+But this is a bad idea. We shouldn't put HTML in our translations, because then we'd be coupling our translations to markup, resulting in a few problems:
+
+- If you ever need to update the styling, you'd have to update the translation string for all the languages your application supports.
+- Your translators might not be familiar with HTML, and might accidentally break the markup.
+
+## So how should we do it?
+
+Here's a solution I've found that works quite well, and it's inspired by Markdown.
+
+Instead of putting HTML inside your translations, you can use a simple syntax to denote where you want to apply styles, links, or tooltips. For example:
+
+```json
+{
+  "termsAndConditions": "By clicking Proceed, you agree to our **Terms and Conditions**"
+}
+```
+
+Then, in your template, you can parse this string and apply the necessary styles or links.
+
+```html
+<div>
+    {!! preg_replace(
+        '/\*\*(.*?)\*\*/',
+        '<a class="font-medium" href="/terms">$1</span>',
+        __('termsAndConditions')
+    ) !!}
+</div>
+```
+
+Let's break this down.
+
+1. We're using `preg_replace` to find all instances of `**...**` in the string.
+2. We're replacing it with an anchor tag that has the class `font-medium` and the href `/terms`.
+3. The `$1` in the replacement string is a reference to the content inside the `**...**`.
+
+and lastly,
+
+4. We're using the `{!! ... !!}` syntax in Laravel to avoid escaping the HTML, because we want the HTML to be rendered as HTML, not as text.
+
+It's worth mentioning that you should only do this for strings that you trust. If the content is user-generated, you should use a proper HTML sanitisation library to prevent XSS attacks.
+
+## More complex use cases
+
+Sometimes it's not as simple as just one replacement. Maybe in a single string you need to make one word bold, and two separate links.
+
+The same underlying principle applies - use a simple symbol to wrap those fragments in your translation file, and apply the wrapping afterwards.
+
+Now we _could_ solve this by using the same symbol, and using the ordering to know what to wrap the string with; but this isn't completely locale safe. Let's see why:
+
+```json
+{
+    "termsAndConditions": "By clicking **Proceed**, you agree to our **Terms and Conditions** and **Privacy Policy**"
+}
+```
+
+With a translation string like this, you'd have to use a `preg_replace` to say:
+
+- Wrap the first instance of `**..**` with a bold span
+- Wrap the second instance of `**..**` with a link to the Terms
+- Wrap the third instance of `**..**` with a link to the Privacy Policy.
+
+That works great for English, but let's not forget that not all languages follow the same syntax as English.
+
+If you support a language where the ordering of those pieces is different, you might end up with some strange behaviour, like the "Proceed" string becoming a link to the Terms.
+
+### A better way to handle complex use cases
+
+When you need to wrap more than one fragment, you're better off explicitly defining what each fragment is. We still want to keep this simple, so a numbering solution works well.
+
+```json
+{
+    "termsAndConditions": "By clicking *0*Proceed*0*, you agree to our *1*Terms and Conditions*1* and *2*Privacy Policy*2*"
+}
+```
+
+Now when we get to the wrapping part, we can pass an array of patterms to `preg_replace`, like so:
+
+```php
+preg_replace(
+  [
+    '/\*0\*(.*?)\*0\*/',
+    '/\*1\*(.*?)\*1\*/',
+    '/\*2\*(.*?)\*2\*/',
+  ],
+  [
+    '<span class="font-medium">$1</span>',
+    '<a href="/terms">$1</a>',
+    '<a href="/privacy">$1</a>'
+  ],
+  __('termsAndConditions'),
+)
+```
+
+## Summary
+
+Remember, markup doesn't belong in your translation files. Instead, wrap the strings with a basic symbol, and do the wrapping in your Blade file.
+
+When you're wrapping more than one fragment in a string, don't assume the fragments will always be in the same order as English. Give each fragment some kind of identifier.
+
+And finally, use `{!! .. !!}` with caution to avoid XSS attacks.

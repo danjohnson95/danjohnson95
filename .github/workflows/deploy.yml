@@ -1,0 +1,73 @@
+name: Deploy on Merge to Master
+
+on:
+  push:
+    branches:
+      - master
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout the repository
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Set up PHP
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3' # Adjust PHP version as needed
+          extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, bcmath, soap, intl, gd, exif, iconv
+          coverage: none
+
+      # Install Composer dependencies
+      - name: Install dependencies
+        run: composer install -n --prefer-dist
+
+      - name: Set Up Laravel Environment
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+
+      - name: Install npm dependencies
+        run: npm install
+
+      # We need to serve so we can crawl for export
+      - name: Serve
+        run: nohup php artisan serve --host=127.0.0.1 --port=8000 &
+
+      - name: Wait for server to start
+        run: sleep 5 # Give the server time to start
+
+      # Run Laravel artisan export
+      - name: Run artisan export
+        run: php artisan export
+        env:
+          APP_URL: http://localhost:8000
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload Laravel Logs on Failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: laravel-logs
+          path: storage/logs/laravel.log
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: 'dist'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

@@ -1,0 +1,112 @@
+---
+title: Sneezie
+subtitle: Track your sneezes
+date: "2024-08-01T00:00:00"
+imageUrl: /images/projects/sneezie.png
+appId: id6670272361
+tags:
+    - iOS app
+---
+
+Sneezie started out as a bit of a joke, but soon became a passion project. During the summer, I suffer from hayfever which makes my eyes itch, my nose drip, and most importantly, makes me sneeze.
+
+One summers day with a particularly high pollen count, a co-worker heard my constant sneezes and said:
+
+> Dan, how many minutes do you reckon you spend sneezing per day?
+
+Of course, I needed to know the answer, and the only way to know for sure was to build an app.
+
+## First draft - v1.0
+
+The first version of the app was super basic - it was just a ➕ button, and a list of your recent sneezes. Using [SwiftUI](https://developer.apple.com/xcode/swiftui/) meant I could whip together a basic interface in no time, and [SwiftData](https://developer.apple.com/xcode/swiftdata/) made storing all that valuable information so easy.
+
+It was simple but it did the job - every time I sneezed, I'd fire up the app and log my sneeze. In no time I started to build up a log of data.
+
+## Ease of use - v1.1
+
+For me, opening the app to log my sneeze became second nature. But when I tried to get family and friends onboard, they quickly lost interest because there was too much friction in _the action of recording_ the sneeze.
+
+### Exploring sound recognition
+
+Now, iPhones have a [Sound Recognition](https://support.apple.com/en-gb/guide/iphone/iphf2dc33312/ios) accessibility feature, where your device uses Machine Learning to recognise a sound, and presents a notification on your device describing the sound.
+
+You can even train the model on custom sounds! 
+
+This would've been perfect: the iPhone could listen out for sneezes, and each time it detects one, it would log the sneeze in Sneezie.
+
+Unfortunately, there were a few problems with this approach:
+
+- Apple's Sound Recognition is very resource intensive. Since it's always listening and processing audio, users would see a massive drop in their battery life.
+- Training the model would be difficult. Everyone's sneeze is different, so each user would need to train the model on their own sneeze. And getting a recording of your sneeze means unlocking your phone and opening the app _before_ the sneeze happens.
+- Apple doesn't currently expose an API for third-party apps to interact with Sound Recognition.
+- Apple doesn't currently allow you to run a Shortcut after a sound is recognised.
+
+So with that, sound recognition was out the window.
+
+### Widget
+
+If I couldn't automatically detect a sneeze, then my only option was to make the logging of sneezes easier.
+
+Starting with iOS 17, developers can now [add interactivity to widgets](https://developer.apple.com/documentation/widgetkit/adding-interactivity-to-widgets-and-live-activities). This meant that I could let users log a sneeze directly from the Home Screen!
+
+And while I was at it, I also made a Lock Screen Widget so users can always see how many sneezes they've done for the day.
+
+### Shortcut
+
+In order to add interactivity to a Widget, we have to create an `AppIntent` for the action of logging a sneeze. The handy thing here is that an `AppIntent` is also used in Apple's Shortcuts app.
+
+This opened up lots of possibilities for logging a sneeze, for example, being able to press the physical Action Button on the side of the phone to log a sneeze.
+
+## More data! - v1.2
+
+Now that sneezes were much easier to log, it was time to do more with the data. Up until this point, we were only collecting the timestamp of when the sneeze took place.
+
+But there's plenty more we can collect to make this data more meaningful.
+
+### Location
+
+Do you sneeze more at home? In the office? Sneezie v1.2 introduced the optional functionality to collect your location each time you log a sneeze.
+
+### Weather data
+
+If you granted Location permission for a sneeze, Sneezie will also use [WeatherKit](https://developer.apple.com/weatherkit/) to record the current weather for your location when the sneeze happened.
+
+This could come in handy for attributing sneezes to different weather patterns: _Do I sneeze more on sunny days_ for example.
+
+### Categories
+
+Categories is a simple but powerful functionality that allows users to attribute a sneeze to anything they like.
+
+Users can create their own categories and give each one an icon.
+
+When a sneeze is logged, the user can attach that sneeze to one or more of the custom categories they've created.
+
+### Visualisation
+
+## Making it fun - v1.3
+
+Sneezie v1.3 came with the functionality to keep track of your "Sneeze Streak" - the number of consecutive days where you've sneezed at least one time.
+
+## What's next
+
+Sneezie has a bunch of features in the pipeline that I'm super excited to be working on, and can't wait to bring them into your hands soon.
+
+Here's a peek at what's on the roadmap.
+
+### Sneezie Friends
+
+Soon you'll be able to add friends and see how often they're sneezing. You'll also be able to opt into push notifications, so you'll be notified each time your friend sneezes.
+
+And with each sneeze, you'll be able to send a virtual "Bless you".
+
+### World map
+
+If you granted location access to Sneezie, soon you'll be able to view all of your sneezes on a map.
+
+### Better visualisation
+
+Sneezie will soon come with better visualisation of your sneeze data - you'll be able to see graphs of your sneezes over time, and filter this data based on categories, location, weather and more.
+
+---
+
+Sneezie is a free iOS app and is available on the App Store today.

@@ -1,0 +1,151 @@
+---
+title: Barcodes and Magstripes on the web
+date: "2023-06-22T20:43:40+01:00"
+summary: Connecting legacy peripherals to the web is easier than you think!
+image: /images/blogs/me-scanning-beans.jpeg
+imageAlt: Me scanning a tin of beans
+tags:
+  - Javascript
+---
+
+The barcode and the magstripe were invented in 1948 and 1960 respectively, and yet they're still used daily in commerce, hospitality, and many other industries.
+
+Why? Because they're a super quick and cheap way of referencing a physical item (a membership card, or a tube of moisturiser) to a program.
+
+## Hardware
+
+Most readers don't require specific drivers to run. They're plug-and-play, meaning you can connect the hardware to your device's USB port, scan the media, and the payload of the barcode will magically appear as if you typed it out really quickly on your keyboard.
+
+And that's exactly how they work! They're _keyboard emulation_ devices- meaning your device recognises the hardware as a keyboard.
+
+So when you scan that tube of moisturiser or swipe that membership card, the hardware is doing the heavy lifting of decoding the payload and sending the raw value over USB for your device to interpret as a series of keystrokes.
+
+## Reader scans on the web
+
+Because it's just keystrokes, you can already utilise the power of your reader on the web with a simple `<input/>`.
+
+But there's one important caveat - the input field **must be in focus** for the keystrokes to be put in the input.
+
+Forcing the user to focus the input before scanning the media adds friction to the experience. Plus, what if you don't want the value going into an input?
+
+I needed to build a solution where media could be scanned at any time _without_ the user needing to click anything beforehand. It needed to recognise the scan regardless of which page you're on, or which element was in focus.
+
+## Identifying reader scans in React
+
+What can we use to distinguish something typed in by a user versus something scanned by a reader?
+
+⚡️ **Speed**.
+
+The average barcode scanner sends keystrokes at around 20ms per keystroke. That equates to 12,000 keystrokes per minute. With the world record of typing at 360 words per minute, 12,000 keystrokes per minute is much faster than a human can type, so: we can determine that if a sequence of characters was inputted with no greater than _X_ milliseconds between each keystroke, it was a value inputted by a reader device.
+
+After some real world testing, I found that a reliable figure for _X_ is 50ms.
+
+And as the length of the sequence increases, the likelyhood of it being human input decreases. So I found the perfect minumum sequence length to be 4 characters.
+
+This was determined by testing with a range of different readers (Barcode, Magstripe) and different interfaces (USB, Bluetooth) to ensure the value was high enough, and different typists to ensure we never get any false negatives.
+
+### The code
+
+Let's dig into the code. We'll be using [RxJS](https://rxjs.dev) to help us out here. RxJS is a library for reactive programming using observables.
+
+First we'll install RxJS as a dependency
+
+```shell
+npm install --save rxjs
+```
+
+Next, we'll write a component which creates an event listener for keypresses.
+
+```typescript
+import { fromEvent } from 'rxjs'
+
+export const BarcodeListener = () => {
+  const source = fromEvent<KeyboardEvent>(document, 'keypress')
+
+  return null
+}
+```
+
+We'll use a `useEffect` hook to register this listener when the component is mounted, and we'll use the `subscribe` function to define our callback. We'll also `unsubscribe` once the component is unmounted.
+
+```typescript{6,11}
+import { fromEvent } from 'rxjs'
+
+export const BarcodeListener: React.FC = () => {
+  const source = fromEvent<KeyboardEvent>(document, 'keypress')
+
+  useEffect(() => {
+    const subscription = source
+      .subscribe(console.log)
+
+    return () => subscription.unsubscribe()
+  }, [])
+
+  return null
+}
+```
+
+Cool! We're now subscribed to keypresses on the document, and the `KeyboardEvent` event will be outputted into the console.
+
+But now we need to collate multiple keypress events together and determine if they originated from a scanner device.
+
+This is where the power of RxJS comes in. We'll use the [`buffer`](https://rxjs.dev/api/index/function/buffer) function to collect previous events into one.
+
+> Collects values from the past as an array, and emits that array only when another Observable emits.
+
+We'll also use the [`debounceTime`](https://rxjs.dev/api/index/function/debounceTime) so that we can disregard events that had more than 50ms between them.
+
+> It's like delay, but passes only the most recent notification from each burst of emissions.
+
+We'll then use [`filter`](https://rxjs.dev/api/index/function/filter) to filter out bursts that contain less than 4 characters.
+
+> Like Array.prototype.filter(), it only emits a value from the source if it passes a criterion function.
+
+Finally, we'll use [`pipe`](https://rxjs.dev/api/index/function/pipe) to chain the outputs of `buffer` and `filter` together.
+
+Let's see this in action:
+
+```typescript
+import { fromEvent } from 'rxjs'
+
+const timeout = 50 // 50 milliseconds
+const minLength = 4 // 4 characters minumum
+
+const doesStreamLookLikeScan = (events: KeyboardEvent[]): boolean => {
+  return events.length >= minLength
+}
+
+export const BarcodeListener: React.FC = () => {
+  const source = fromEvent<KeyboardEvent>(document, 'keypress')
+
+  const handlePotentialScan = (events: KeyboardEvent[]) => {
+    const payload = events.map(event => event.key).join('')
+
+    // 🎉 We have our payload!
+    alert(`You scanned ${payload}!`)
+  }
+
+  useEffect(() => {
+    const subscription = source
+      .pipe(
+        buffer(source.pipe(debounceTime(timeout))),
+        filter(doesStreamLookLikeScan)
+      )
+      .subscribe(handlePotentialScan)
+
+    return () => subscription.unsubscribe()
+  }, [])
+
+  return null
+}
+```
+
+Now, the `handlePotentialScan` function will be run every time media is scanned using a reader, and is compatible with Magstripe, Barcode and even RFID readers without any configuration change.
+
+## Conclusion
+
+Now that you've got a component recognising barcode scans, you can hook this up to your application.
+
+Check out the GitHub repo below for examples on how I hooked this up with React Context to customise the scanning behaviour throughout the application.
+
+And if you have any comments, suggestions, or questions, leave a comment!

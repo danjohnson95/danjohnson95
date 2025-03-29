@@ -1,0 +1,126 @@
+---
+title: Localisation in Laravel Vapor
+date: "2024-03-08T22:16:05+00:00"
+summary: Laravel Vapor doesn't support localisation out of the box - here's how to add it
+image: /images/blogs/localisation-in-vapor.png
+tags:
+  - Localisation
+---
+
+Laravel Vapor is a great way to deploy your Laravel application if you need scalability and simplicity - and these things are essential if you're building an application targetting a global audience.
+
+And Laravel comes with some [great localication features](https://laravel.com/docs/11.x/localization). But you may be surprised to learn that **important parts of localisation won't work out of the box in Vapor**.
+
+[TLDR, here's the fix.](#The-fix)
+
+## Number formatting
+
+If you're building an application that targets a global audience, you'll be aware that different countries have their own way of formatting numbers.
+
+* Thousands may be separated by a space, a comma, or a full stop
+* Decimal places may be separated by a comma or a full stop
+* The currency symbol may be placed before or after the number
+* Numbers may use a completely different character set
+
+So for example, a number like `12345.67` could be written as:
+
+* `12,345.67` in the UK
+* `12 345,67` in France
+* `12.345,67` in Germany
+* `١٢٬٣٤٥٫٦٧` in Saudi Arabia
+
+Luckily as PHP programmers we don't need to worry about this - PHP has excellent support for this with the `intl` extension. And Laravel's got a great wrapper for this.
+
+Run some code like this in your local environment (like [Herd](https://herd.laravel.com)) and it's going to work great:
+
+```php
+use Illuminate\Support\Number;
+
+app()->setLocale('en');
+Number::format(12345.67); // 12,345.67
+
+app()->setLocale('fr');
+Number::format(12345.67); // 12 345,67
+
+app()->setLocale('de');
+Number::format(12345.67); // 12.345,67
+
+app()->setLocale('ar');
+Number::format(12345.67); // ١٢٬٣٤٥٫٦٧
+```
+
+but now deploy this with Vapor and you'll find that your numbers are always going to be formatted as `12,345.67`.
+
+And it's not just number formatting that's broken. It's also [date formatting](https://www.php.net/manual/en/class.intldateformatter.php), [string collation](https://www.php.net/manual/en/class.collator.php), [calendar services](https://www.php.net/manual/en/class.intlcalendar.php) and more.
+
+## But why?
+
+To understand why, we need to dive into both how PHP's `intl` extension works, and how Laravel Vapor works.
+
+### `intl` extension
+
+The [`intl` extension](https://www.php.net/manual/en/book.intl.php) provides us with a whole load of useful classes that we can use to format numbers, dates, and strings in a way that's appropriate for the user's locale.
+
+And rather than reinventing the wheel, it's actually just a wrapper around the [ICU library](http://site.icu-project.org/) - a C library that's been around for a long time and is used by many other programming languages.
+
+Locales supported by ICU are retrieved from the operating system.
+
+To see which locales are supported, you can run:
+
+```php
+<?php
+
+print_r(ResourceBundle::getLocales(''));
+```
+
+### Laravel Vapor
+
+Vapor is a serverless deployment platform, and it's built on top of AWS Lambda. Lambda only supports a handful of programming languages, and PHP isn't one of them. So to run PHP on Lambda, Vapor uses Lambda container images: your application is packaged up into an image, and a container of that image is run on Lambda.
+
+The [images that Vapor use](https://github.com/laravel/vapor-dockerfiles) are based off the Alpine Linux distribution build of PHP.
+
+And it's here that we find the problem. Alpine Linux is a minimal distribution of Linux. It's designed to be small, simple and secure; and in order to achieve that, some things are left out. One of those things is locale data.
+
+Let's see which locales are supported on one of Vapor's images:
+
+```bash
+$ docker run --rm laravelphp/vapor:php83-arm php -r "print_r(ResourceBundle::getLocales(''));"
+```
+
+As you can see, Alpine Linux only supports English locales.
+
+### The fix
+
+To fix this, we'll need to make sure we're using a custom runtime in Laravel Vapor.
+
+In your `vapor.yml` file, add a `runtime` key under each environment and set it to `docker` or `docker-arm`.
+
+```yaml
+id: 123
+name: my-app
+environments:
+  production:
+    # ...
+    runtime: docker
+    # ...
+```
+
+Then, create an `environment.Dockerfile` in the root of your project for each environment, replacing `environment` with the environment name. ie `production.Dockerfile`.
+
+Base it off the Vapor image, but additionally install the [`icu-data-full`](https://pkgs.alpinelinux.org/package/edge/main/x86/icu-data-full) package before copying your application into the image.
+
+```
+# production.Dockerfile
+
+FROM laravelphp/vapor:php83
+
+RUN apk add --no-cache icu-data-full
+
+COPY . /var/task
+```
+
+This will give us support for a whopping 851 locales. ¡Qué bueno!
+
+---
+
+And that's it! You can now deploy your Laravel application with localisation support to Laravel Vapor, safe in the knowledge that your numbers, dates, and strings will be formatted correctly for your users, no matter what their preferred locale may be.

@@ -1,0 +1,63 @@
+---
+title: Multilingual Mastery with Laravel
+date: "2024-06-18T16:45:00+00:00"
+summary: Notes and resources from my talk at Laravel Live 2024.
+image: /images/talks/laravel-live-london-2024.jpg
+imageAlt: Me on stage at Laravel Live London 2024
+tags:
+    - Conferences
+    - Localisation
+---
+
+Thanks for watching my talk at Laravel Live 2024. I hope it inspired you to make inclusive, localised applications that can be used by people all over the world.
+
+Here's some links to resources that I mentioned in the talk:
+
+- [Laravel i18n compatibility](https://github.com/danjohnson95/laravel-i18n-compatibility)
+
+  This is a package I developed to allow you to use the localisation syntax commonly seen in frontend frameworks, in Laravel.
+
+- [laravel-translatable](https://github.com/spatie/laravel-translatable)
+
+  Spatie's laravel-translatable package allows you to localise your database driven content.
+
+- [Laravel's Localisation documentation](https://laravel.com/docs/11.x/localization)
+
+  Laravel's documentation is a great place to re-cap most of the string externalisation concepts discussed.
+
+- [Number class](https://laravel.com/api/11.x/Illuminate/Support/Number.html)
+
+  The `Number` class is a great way to format numbers in a locale-aware way.
+
+
+- [Carbon macro-formats](https://carbon.nesbot.com/docs/#available-macro-formats)
+
+  When you're formatting a date in Carbon, you can use the `isoFormat` method to format a date in a locale-aware way, using one of the many macro-formats available here.
+
+- [Accept-Language HTTP header](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept-Language)
+
+  The Accept-Language header provides us with the user's preferred language, as determined by the operating system.
+
+- [HasLocalePreference contract](https://laravel.com/docs/11.x/notifications#user-preferred-locales)
+
+  The HasLocalePreference contract allows you to easily send notifications to a user, using their persisted preferred locale.
+
+- [Lokalise](https://lokalise.com), [Transifex](https://www.transifex.com) and [Crowdin](http://crowdin.com)
+
+  These tools give you a dashboard to manage your translation files, and allow you purchase translations too. They come with a GitHub integration too, so changes to translation files get raised as a PR.
+
+- [i18n a11y VSCode extension](https://github.com/lokalise/i18n-ally)
+
+  This VSCode extension will make your development journey so much easier. You'll see your translations inline, plus you'll get a warning if you're missing a translation key.
+
+- [i18n a11y Jetbrains extension](https://plugins.jetbrains.com/plugin/17212-i18n-ally)
+
+  This extension features the same functionality as mentioned previously, but for Jetbrains IDEs.
+
+## A couple more points,
+
+- If you're using Laravel Vapor to deploy your application, you may need to take some additional steps to support multiple locales. [I've written a blog post](https://danjohnson.xyz/en/blog/localisation-in-laravel-vapor) that steps you through what you need to do, and explains why.
+
+- One thing I didn't touch on here is RTL. This is a whole other topic, but it's something you'll need to think about if you need to add language support for a right-to-left language, like Arabic or Hebrew. I'm hoping to provide you with some content on this in the near future.
+
+- I'm super passionate about this topic, and I want to help you all on your localisation journey. So if you have any questions or feedback, please feel free to reach out to me on [Pinkary](https://pinkary.com/@danjohnsonxyz) or any of my other socials linked there.

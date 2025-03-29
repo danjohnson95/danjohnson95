@@ -1,0 +1,46 @@
+---
+title: Cycle Parking
+date: "2023-01-01T00:00:00"
+imageUrl: /images/projects/cycle-parking.png
+appId: id6450796052
+tags:
+    - iOS app
+---
+
+CycleParking was a project I started way back in 2020 during lockdown - it was my first entry into Swift development.
+
+At the time I spent quite a bit of time cycling around London, and whenever I wanted to hop off my bike to grab a coffee, I needed to find somewhere to securely park it.
+
+London has an abundence of cycle parking infrastructure, but it always seems to be hidden away just when you need it most.
+
+## Getting the data
+
+Luckily, TfL has a ton of [open data](https://tfl.gov.uk/info-for/open-data-users/our-open-data). And their open data team have provided us with the location of every cycle parking spot, along with some other super interesting metadata such as the type of stand and whether it's under cover.
+
+I took this data and built CycleParking - a free application that maps out all these cycle parking spots.
+
+Shortly after release, I saw the potential in this app. I wanted to expand to other cities.
+
+I hunted high and low for other sources of data, but unfortunately no other city had the same fantastic open data as London.
+
+So I began filing Freedom of Information Request notices to various councils across the UK to get access to their database of cycle parking spots.
+
+## Parsing the data
+
+Most councils _did_ have this information, but of course there was no consistency in how the data was received. Sometimes I'd get a CSV, other times I'd get a PDF, and other times I'd get an image.
+
+For each batch of data I received, I wrote a parser to normalise the data, and then inputted this to my CloudKit database using [CloudKit JS](/projects/cloudkit-js).
+
+## Community sourced data
+
+Sometimes I'd spot a cycle parking spot outside a city and I'd want to add this to my app, so I later added the functionality for users to contribute to the Cycle Parking database.
+
+When a user sees a cycle parking spot in the wild, they can simply press the ➕ button, snap a photo of the spot, and provide some basic metadata.
+
+In order to comply with [Apple's Review Guidelines](https://developer.apple.com/app-store/review/guidelines/#1.2), allowing user-contributed data meant I'd need to moderate the submitted content.
+
+So each time a user uploads a spot, I receive a push notification and from there I can approve or deny the contribution.
+
+---
+
+Cycle Parking is a free iOS app and is available on the App Store today.

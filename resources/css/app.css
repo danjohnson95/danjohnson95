@@ -1,0 +1,28 @@
+/* @import url("https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400..700;1,400..700&display=swap"); */
+@import url("https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400..700;1,400..700&display=swap");
+
+@import 'tailwindcss';
+@plugin "@tailwindcss/typography";
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source "../**/*.blade.php";
+@source "../**/*.js";
+@source "../**/*.vue";
+
+:root {
+    --color-background: #fff;
+    --color-border: #e2e8f0;
+
+    @media (prefers-color-scheme: dark) {
+        --color-background: #1a202c;
+        --color-border: #2d3748;
+    }
+}
+
+@theme {
+    --color-background: --color-background;
+    --color-border: --color-border;
+    --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+        'Segoe UI Symbol', 'Noto Color Emoji';
+}

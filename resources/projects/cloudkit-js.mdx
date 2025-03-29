@@ -1,0 +1,83 @@
+---
+title: CloudKit JS
+date: "2023-01-01T00:00:00"
+imageUrl: /images/projects/cloudkit-logo.png
+githubRepository: danjohnson95/cloudkit-js
+---
+
+If you've ever built an application for iOS using Swift, you've probably heard of CloudKit. It's Apple's BaaS (Backend as a Service) that powers iCloud, providing authentication, a private database, a public database and structured asset storage services.
+
+Apple give pretty generous usage to these services if you're enrolled in the [Apple Developer Program](https://developer.apple.com/programs/), making it the perfect choice for a backend for your iOS application.
+
+But if you ever find yourself needing to perform maintenance tasks on your database (seeding data, backing up data), the developer experience is less than ideal.
+
+I faced exactly this problem when I was building [Cycle Parking](/projects/cycle-parking). I needed a way to migrate the tens of thousands of cycle parking spaces from my own data sources into CloudKit.
+
+Now, Apple _do_ provide a REST API for interacting with CloudKit, but to do the most basic DB tasks required some convoluted API calls.
+
+In a classic Dan move, I decided to completely over-engineer this and build a package.
+
+[CloudKit JS](https://github.com/danjohnson95/cloudkit-js) is a Javascript library that makes it super easy for develoeprs to interact with their CloudKit database.
+
+## Usage
+
+Once you've provided the authentication token by following the instructions in the repository's README file, we can begin making database operations.
+
+```ts
+const orm = new CloudKitJs({
+    containerName: secrets.containerName,
+    keyId: secrets.keyId,
+    privateKeyPath: secrets.privateKeyPath,
+})
+
+orm.createRecord({
+    recordType: "Recipes",
+    fields: {
+        recipeName: {
+            value: "Cacio e Pepe",
+        },
+        ingredients: {
+            value: [
+                "Pasta",
+                "Pecorino Romano",
+                "Black Pepper",
+            ],
+        },
+        method: {
+            value: [
+                "Boil water",
+                "Add pasta",
+                "Grate cheese",
+                "Add cheese and pepper to pasta",
+                "Mix",
+            ],
+        },
+        timeToCook: {
+            value: 15
+        },
+        rating: {
+            value: 5
+        },
+    },
+})
+```
+
+Probably my favourite part of the library is how easy it makes asset uploading.
+
+If you were to use Apple's REST API directly, uploading an asset is done with three API calls:
+
+- Requesting the URL to upload the asset to
+- Uploading the image to the given URL
+- Updating the record to attach the asset reference
+
+But with CloudKit JS, it's simple:
+
+```ts
+    await orm.uploadAssetFromUrl(
+        "Recipe", // The record type
+        "image", // The name of the field where the asset should be stored
+        imageUrl, // The URL of the asset
+        recordName, // The name of the record relating to this asset
+    )
+```
+
