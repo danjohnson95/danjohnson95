@@ -42,7 +42,7 @@ class ImageResizeService
         $extension = self::getExtension($src);
         $dir = pathinfo($src, PATHINFO_DIRNAME);
 
-        $newFileName = "conversions{$dir}/{$filename}@{$width}w.{$extension}";
+        $newFileName = "/conversions{$dir}/{$filename}@{$width}w.{$extension}";
 
         // Have we already generated this iamge?
         if (File::exists(public_path($newFileName))) {
