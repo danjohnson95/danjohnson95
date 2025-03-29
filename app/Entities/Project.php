@@ -33,7 +33,7 @@ class Project extends Entity
     public function card()
     {
         return view('components.card', [
-            'url' => route('project.show', $this->slug()),
+            'url' => route('project.show', $this->slug(), false),
             'title' => $this->content->matter('title'),
             'imageSrc' => $this->content->matter('imageUrl'),
             'subtitle' => $this->getSubtitle(),

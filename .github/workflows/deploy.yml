@@ -44,6 +44,7 @@ jobs:
         run: php artisan export
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          APP_URL: https://danjohnson.xyz
 
       - name: Upload Laravel Logs on Failure
         if: failure()

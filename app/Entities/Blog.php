@@ -14,7 +14,7 @@ class Blog extends Entity
     public function card()
     {
         return view('components.card', [
-            'url' => route('blog.show', $this->slug()),
+            'url' => route('blog.show', $this->slug(), false),
             'title' => $this->content->matter('title'),
             'imageSrc' => $this->content->matter('image'),
             'time' => $this->date?->isoFormat('LL'),

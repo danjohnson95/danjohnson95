@@ -27,19 +27,19 @@
     <div class="space-y-32 divide-y divide-dashed divide-border">
         <x-home-section
             title="Projects"
-            href="{{ route('project.index') }}"
+            href="{{ route('project.index', [], false) }}"
             :entities="$projects"
         />
 
         <x-home-section
             title="Talks"
-            href="{{ route('talk.index') }}"
+            href="{{ route('talk.index', [], false) }}"
             :entities="$talks"
         />
 
         <x-home-section
             title="Blog"
-            href="{{ route('blog.index') }}"
+            href="{{ route('blog.index', [], false) }}"
             :entities="$blogs"
         />
     </div>

@@ -6,7 +6,7 @@
 
 @section('content')
     <div class="flex items-center justify-center my-8">
-        <a href="{{ route('project.index') }}">
+        <a href="{{ route('project.index', [], false) }}">
             <x-tag>Projects</x-tag>
         </a>
     </div>

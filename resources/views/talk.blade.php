@@ -2,7 +2,7 @@
 
 @section('content')
     <div class="flex items-center justify-center my-8">
-        <a href="{{ route('talk.index') }}">
+        <a href="{{ route('talk.index', [], false) }}">
             <x-tag>Talks</x-tag>
         </a>
     </div>
