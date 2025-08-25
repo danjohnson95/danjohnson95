@@ -6,6 +6,10 @@
     <meta name="twitter:title" content="{{ $blog->content->matter('title') }}">
     <meta name="twitter:description" content="{{ $blog->content->matter('summary') }}">
     <meta name="twitter:image" content="{{ url($blog->content->matter('image')) }}">
+
+    <meta name="og:title" content="{{ $blog->content->matter('title') }}">
+    <meta name="og:description" content="{{ $blog->content->matter('summary') }}">
+    <meta name="og:image" content="{{ url($blog->content->matter('image')) }}">
 @endsection
 
 @section('content')
