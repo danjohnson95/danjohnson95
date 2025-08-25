@@ -1,0 +1,230 @@
+---
+title: How I managed to let the audience control blenders live on stage
+date: "2025-08-25T17:10:20+01:00"
+summary: How I managed to let the audience control blenders live on stage at Laravel Live Denmark
+image: /images/blogs/blenders.jpeg
+tags:
+    - Conferences
+---
+
+I just got back from Laravel Live Denmark and I'm so excited to share what I got up to. But also, I'd like to walk you through how I managed to let the audience control three blenders on stage from their mobile devices.
+
+# Pre-conference prep
+
+Back in March, the organisers kindly invited me back to Laravel Live DK for the second year, this time to talk about [Pinout](https://github.com/danjohnson95/pinout), a library I built for controlling hardware components from a Laravel application.
+
+I'd already just given this talk at Laracon India, but I always knew there was going to be some kind of special extra element to the talk in Copenhagen. As the months went on, I got sucked into some large projects at work and struggled to find the time to work out what that special extra element would be.
+
+That was until I bumped into [Kasper Hartwich](https://x.com/kasperh) at a hotel bar in London after Laravel Live. After a couple of pints together, he came up with the crazy idea of letting the audience control blenders live on stage.
+
+It was genius, but a huge challenge. I'm not an electrician so working with mains voltage is always a bit scary. And there were a ton of challenges to work out, like:
+
+- How would the blenders wire into the Raspberry Pi?
+- If I build it for UK mains, will it work on European mains?
+- Where would we get blenders from?
+- How would the audience control them?
+- How would the Pi handle so many concurrent connections from each audience member?
+- How would the Pi connect to the internet?
+- What was going into the blenders?
+- How would the blenders be placed on stage?
+
+I got to work solving these problems one by one, meanwhile Kasper worked on getting some blenders.
+
+## Software running on the Pi
+
+The Raspberry Pi is pretty powerful, but there's only so much it can do with such a small footprint.
+
+Initially I thought I could run a web server on my Pi and get the audience to connect to that - but after some load testing, I quickly realised that the Pi wasn't going to be able to support the ~200 concurrent connections needed for each audience member to be abe to participate.
+
+Next idea: run a tiny webserver on the Pi just for exposing an API endpoint for turning on/off each relay. Only one device (mine) would make requests to this API.
+
+![](/images/blogs/blender-diagram.png)
+
+Pinout made this super simple: the resulting code looked like this:
+
+```php
+<?php
+
+namespace App\Http\Controllers;
+
+use DanJohnson95\Pinout\Facades\PinService;
+
+class RelayController extends Controller
+{
+    public function __invoke(string $relay, string $state)
+    {
+        // Relay 1 is on pin 26, Relay 2 is on pin 19, Relay 3 is on pin 6.
+        $pin = match ($relayNumber) {
+            1 => PinService::pin(26),
+            2 => PinService::pin(19),
+            3 => PinService::pin(6),
+            default => abort(404, 'Relay not found'),
+        };
+
+        match ($state) {
+            'on' => $pin->turnOn(),
+            'off' => $pin->turnOff(),
+            default => abort(400, 'Invalid state'),
+        };
+
+        return response()->json(['message' => "Relay {$relayNumber} is now {$state}"]);
+    }
+}
+```
+
+I used Apache2 as a webserver, and I used [ngrok](https://ngrok.com) to give my Pi a static hostname. I configured a shell script to run ngrok on boot, meaning that in theory, the webserver would be accessible from a known URL shortly after powering the Pi, with no interaction required.
+
+## Software in the Cloud
+
+The next Laravel application I needed to write was the one to be hosted in Laravel Cloud. This is what the audience would open up on their phone.
+
+The first iteration of this was a simple voting system - the audience would be presented with three buttons, and they can click one once to vote for which blender they want turned on.
+
+On my screen, I'd have the same Laravel app open but pointing to `/admin`, where the number of votes would appear in real time using websockets.
+
+Once we had enough votes, I'd click a button on the page to make a HTTP request to the Pi and turn on one of the blenders. To put this together quickly, I opted for Laravel Livewire.
+
+![](/images/blogs/voting-screen-version-1.png)
+
+It wasn't until the morning of the conference when I rewrote all of that - more on that later 👀
+
+## Wiring
+
+To reduce as much of the complications of working with 240V mains electricity as possible, I opted to use the [SONOFF MINIR4 relay](https://sonoff.tech/en-uk/products/sonoff-mini-extreme-wi-fi-smart-switch-minir4). It's a tiny box that takes a live and neutral wire in, then has a live and neutral wire out. By default, power won't flow from input to output. But it also has two additional connections; S1 and S2, which when connected together, allow power to flow from input to output.
+
+So I just needed a way to programatically close a circuit between S1 and S2. For this I used a [4N35 Optocoupler semiconductor](https://uk.rs-online.com/web/p/optocouplers/1652468) - it's an electronic component that transfers signals between two isolated circuits using light. I connected one leg of the 4N35 to a GPIO pin on the Raspberry Pi, and connected the output pins to S1 and S2 of the SONOFF relay.
+
+Back to the mains wiring - I needed a way to easily connect all this up to the mains, and connect the circuit up to the blenders without having to cut any wires, so I used a single socket female plug for each relay. Here in the UK, we can only get sockets for UK plugs, so I also needed some European to UK travel adapters.
+
+Here's a diagram of how everything was wired together:
+
+![](/images/blogs/wiring-diagram.png)
+
+And here's how it looked in real life:
+
+![A mess of wires, relays, sockets and a breadboard](/images/blogs/blender-wiring.jpeg)
+
+I tested out my electronics by connecting up some lamps to the sockets, and by hitting the webserver running on my Pi.
+
+```
+POST https://hardware.danjohnson.xyz/1/on
+```
+
+This was a magical moment - I could control the lamps just from making a HTTP request!
+
+<video controls>
+<source src="/videos/wiring-demo.mov"/>
+</video>
+
+By now it was time to pack away all the electronics, head to Denmark and hope everything made it through airport security.
+
+# Arriving in Copenhagen
+
+There was still a lot to figure out, so straight after landing, I got in a cab and headed straight to the venue from the airport.
+
+When I arrived I plugged everything in to test it out, and straight away there was a major problem.
+
+**My Pi's webserver wasn't accessible.**
+
+Logically, this can only mean one of four things:
+
+1) WiFi not connected
+2) Apache2 boot script not running
+3) ngrok boot script not running
+4) The Pi is broken completely
+
+Of course, it must be the WiFi. I hadn't configured the Pi to the venue's WiFi, so it had no idea how to connect to the WiFi. Only issue was... I couldn't SSH into the device to give it credentials because it wasn't on the network. And I didn't have a USB keyboard with me, so I couldn't run commands directly.
+
+Luckily, the Raspberry Pi allows pre-configuring WiFi credentials without connecting to the Pi by creating a file on the SD card named `wpa_supplicant.conf`:
+
+```
+country=DK
+ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
+update_config=1
+
+network={
+    ssid="LaravelLiveDenmark"
+    psk="Typesense"
+}
+```
+
+When the device boots up, it uses this file to try to connect to the given network.
+
+I wrote this file, plugged in the Pi, and ran an `arp -a` to find the local IP address. But the Pi didn't appear...
+
+This meant that either the `wpa_supplicant.conf` file was being ignored, or that it was unable to connect to the network.
+
+So my next idea was to use a new microSD card to create a new installation of Raspberry OS, and I'd provide the conference WiFi details to the installer tool so that the OS would definitely know how to connect to the network. I went through all the steps, plugged in the SD card, and _still_ it wasn't connecting to the network.
+
+The next theory was that the Pi isn't capable of connecting to the conference WiFi due to hardware constraints - my iPhone was reporting that the conference WiFi was WPA3, which according to the spec sheet, is not supported by my Pi. So to test this theory, I set up a hotspot on my iPhone and updated the `wpa_supplicant.conf` file to point to my hotspot.
+
+**STILL NOTHING.**
+
+At this point I was left with two theories:
+
+1) The Pi is broken completely
+2) The `wpa_supplicant.conf` file is being ignored, plus it can't connect to a 5GHz network, nor a WPA3 network.
+
+Desperately hoping it wasn't the first theory, my last ditch attempt was to rename my iPhone's hotspot after my home network. Same SSID, same passphrase. And I'd enable the "Maximise compatibility" toggle to force it to broadcast at 2.4GHz.
+
+**IT WORKED 🎉**
+
+I have never been so happy to see that green icon indicating a device is connected to the hotspot.
+
+![](/images/blogs/iphone-hotspot-indicator.png)
+
+I hit the HTTP endpoint on the Pi and finally, the blender (and I) screamed into life. 
+
+# Conference day 1
+
+Now that all the hardware was sorted, I had time to think about the interactive part. I didn't love that the audience would just be getting to vote a single time - we could make things much crazier if the audience could smash buttons, and effectively control the blenders themselves.
+
+## Rewriting the application
+
+Inspired by [Leah Thompson](https://x.com/LeahTCodes)'s talk on Inertia with React, I decided to rewrite everything in React. (Yup, 5 hours before I went on stage).
+
+I was expecting a _lot_ of traffic in the short time this application would be in use, so offloading as much to the client-side as possible made sense.
+
+The main idea was:
+
+- Every time the user presses one of the three buttons, it'd broadcast a message on the websocket.
+- The `/admin` page (only open on my device) would listen to these messages using the `useEcho()` hook, and would keep a count in memory for how many times that option was voted for.
+- When the number of votes reached a threshold, it would make a client request to the Pi's API to turn _on_ that relay.
+- Using a ["leaky bucket"](https://en.wikipedia.org/wiki/Leaky_bucket) algorithm, the number of votes would continually decrease. When it dropped below a threshold, it would make a client request to the Pi's API to turn _off_ that relay.
+
+But those thresholds were hard to figure out considering I wasn't sure _how many audience members would participate_, and _how fast they would button smash_.
+
+So I added in some slider bars so that I could customise this on stage.
+
+![](/images/blogs/voting-screen-version-2.png)
+
+I spent most of the day hiding backstage hacking this together, and eventually finished around lunchtime. Just before I went on stage, the Laravel Cloud team helped me optimise my compute size ready for the massive influx of traffic. 
+
+![](/images/blogs/backstage.png)
+
+## On stage
+
+Half way through the talk, it was time to unveil the blenders. The Pi connected to the hotspot on my phone when I plugged everything in, so I was confident everything would work as expected.
+
+And apart from a small hiccup where one of the slider bars wasn't adjusted correctly, a quick bit of on-stage debugging resolved that and everything worked perfectly - the audience smashed the buttons, the level indicators danced into life, and the blenders started powering on and off.
+
+![](/images/blogs/blenders.jpeg)
+
+In fact, the audience made a whopping 68K requests in the couple of minutes it was live.
+
+![](/images/blogs/cloud-metrics.png)
+
+# Rest of the stay
+
+After that, it was time to enjoy the rest of the conference, hang out with old friends, make new friends and relax.
+
+On the Saturday, I did something I've been wanting to do for a while: I took the [Nordic Seaplanes](https://www.seaplanes.dk/en) sightseeing flight around Copenhagen. Such a memorable experience and I loved every second of it!
+
+![](/images/blogs/seaplane-1.jpeg)
+![](/images/blogs/seaplane-2.jpeg)
+![](/images/blogs/seaplane-3.jpeg)
+
+
+
+
+
