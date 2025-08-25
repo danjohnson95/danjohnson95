@@ -2,6 +2,10 @@
 
 @section('head')
     {!!  $blog->schema() !!}
+
+    <meta name="twitter:title" content="{{ $blog->content->matter('title') }}">
+    <meta name="twitter:description" content="{{ $blog->content->matter('summary') }}">
+    <meta name="twitter:image" content="{{ url($blog->content->matter('image')) }}">
 @endsection
 
 @section('content')

@@ -29,7 +29,7 @@ class Blog extends Entity
             ->articleBody($this->content->body())
             ->dateCreated($this->date?->toIso8601String())
             ->datePublished($this->date?->toIso8601String())
-            ->image($this->content->matter('image'))
-            ->author(config('app.me'));
-    }
+            ->author(config('app.me'))
+            ->image(url($this->content->matter('image')));
+        }
 }
