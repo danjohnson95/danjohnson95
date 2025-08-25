@@ -32,7 +32,8 @@
 
     @if ($markdown)
         <article class="py-4 max-w-3xl mx-auto space-y-4">
-            <div class="prose prose-headings:before:content-[yo] prose-blockquote:border dark:prose-blockquote:border-gray-500 prose-blockquote:border-gray-300 prose-blockquote:rounded-lg prose-code:before:content-none prose-code:after:content-none prose-code:bg-gray-200 prose-code:px-2 prose-code:py-1 prose-code:rounded dark:prose-code:bg-gray-700 dark:prose-invert mx-auto max-w-3xl">
+            <div class="prose dark:prose-invert prose-code:before:content-none prose-code:after:content-none prose-code:rounded">
+            {{-- <div class="prose prose-headings:before:content-[yo] prose-blockquote:border dark:prose-blockquote:border-gray-500 prose-blockquote:border-gray-300 prose-blockquote:rounded-lg prose-code:before:content-none prose-code:after:content-none prose-code:bg-gray-200 prose-code:px-2 prose-code:py-1 prose-code:rounded dark:prose-code:bg-gray-700 dark:prose-invert mx-auto max-w-3xl"> --}}
                 <x-markdown>
                     {!! $markdown !!}
                 </x-markdown>
