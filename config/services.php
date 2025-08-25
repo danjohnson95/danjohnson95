@@ -37,6 +37,9 @@ return [
 
     'github' => [
         'token' => env('GITHUB_TOKEN'),
-    ]
+    ],
 
+    'mixpanel' => [
+        'project_key' => env('MIXPANEL_PROJECT_KEY'),
+    ],
 ];

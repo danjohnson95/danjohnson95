@@ -49,6 +49,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           APP_ENV: production
           APP_URL: https://danjohnson.xyz
+          MIXPANEL_PROJECT_KEY: ${{ secrets.MIXPANEL_PROJECT_KEY }}
 
       - name: Upload Laravel Logs on Failure
         if: failure()
